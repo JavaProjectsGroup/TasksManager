@@ -11,13 +11,17 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception{
         Parent root = FXMLLoader.load(getClass().getResource("mainWindow.fxml"));
-        primaryStage.setTitle("Hello World");
-        primaryStage.setScene(new Scene(root, 300, 275));
+        primaryStage.setTitle("Tasks Manager Application");
+        primaryStage.setScene(new Scene(root, 900, 600));
         primaryStage.show();
     }
 
-
     public static void main(String[] args) {
         launch(args);
+    }
+
+    @Override
+    public void init() throws Exception {
+
     }
 }
