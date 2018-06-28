@@ -26,6 +26,9 @@
                         <MenuItem text="Load user"/>
                     </items>
                 </Menu>
+                <Menu text="Statistics">
+
+                </Menu>
             </MenuBar>
         </VBox>
     </top>
