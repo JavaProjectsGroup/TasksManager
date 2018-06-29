@@ -22,6 +22,11 @@ public class Main extends Application {
 
     @Override
     public void init() throws Exception {
+        //TODO
+    }
 
+    @Override
+    public void stop() throws Exception {
+        //TODO
     }
 }
