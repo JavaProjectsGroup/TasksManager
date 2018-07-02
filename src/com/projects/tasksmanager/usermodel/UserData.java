@@ -1,4 +1,4 @@
-package com.projects.tasksmanager;
+package com.projects.tasksmanager.usermodel;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -9,10 +9,6 @@ public class UserData {
 
     public UserData(String username) {
         this.username = username;
-    }
-
-    public void addNewTask(Task newTask) {
-        tasks.add(newTask);
     }
 
     public String getUsername() {
@@ -29,5 +25,21 @@ public class UserData {
 
     public void setTasks(ObservableList<Task> tasks) {
         this.tasks = tasks;
+    }
+
+    public void addTaskToList(Task newTask) {
+        tasks.add(newTask);
+    }
+
+    public void clearTasks() {
+        tasks.clear();
+    }
+
+    public void removeTaskFromList(Task selectedTask) {
+        tasks.remove(selectedTask);
+    }
+
+    public void editTaskOnList(Task selectedTask, Task editedTask) {
+        tasks.set(tasks.indexOf(selectedTask),editedTask);
     }
 }

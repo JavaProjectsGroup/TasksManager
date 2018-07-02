@@ -1,4 +1,4 @@
-package com.projects.tasksmanager;
+package com.projects.tasksmanager.usermodel;
 
 import java.time.Duration;
 

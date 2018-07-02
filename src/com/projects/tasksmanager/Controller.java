@@ -1,14 +1,16 @@
 package com.projects.tasksmanager;
 
+import com.projects.tasksmanager.usermodel.Task;
+import com.projects.tasksmanager.usermodel.UserData;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
@@ -18,10 +20,10 @@ import javafx.scene.text.Font;
 import javafx.util.Callback;
 import javafx.util.Duration;
 
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.function.Predicate;
+import java.util.Optional;
 
 public class Controller {
     @FXML
@@ -33,30 +35,23 @@ public class Controller {
     @FXML
     private Label tempLabel;
     @FXML
+    private Button addTaskButton;
+    @FXML
     private ListView<Task> tasksList;
+
+    private UserData user;
 
     private VBox containerBox = new VBox();
     private HBox buttonsBox = new HBox();
     private Label durationLabel = new Label("mm:ss");
     private Button contButton = new Button("START/PAUSE");
     private Button stopButton = new Button("STOP");
+    private ContextMenu cellContextMenu = new ContextMenu();
 
-    private FilteredList<Task> filteredList;
-    private Predicate<Task> wantDailyTasks;
+    //private FilteredList<Task> filteredList;
+    //private Predicate<Task> wantDailyTasks;
 
     public void initialize() {
-        //Creating temporary user for testing
-        //TODO -> move code to loading user from file
-        UserData tempNewUser = new UserData("Test");
-        Task task1 = new Task("Do job 1", java.time.Duration.ofSeconds(0),6);
-        Task task2 = new Task("Do job 2", java.time.Duration.ofSeconds(500),2);
-        Task task3 = new Task("Do job 3", java.time.Duration.ofSeconds(120),6);
-        Task task4 = new Task("Do job 4", java.time.Duration.ofSeconds(10500),4);
-        tempNewUser.addNewTask(task1);
-        tempNewUser.addNewTask(task2);
-        tempNewUser.addNewTask(task3);
-        tempNewUser.addNewTask(task4);
-
         //Modifying look of Labels and Buttons
         stopButton.setFont(new Font("Arial bold",20));
         contButton.setFont(new Font("Arial bold",20));
@@ -72,32 +67,21 @@ public class Controller {
         buttonsBox.getChildren().addAll(contButton,stopButton);
         containerBox.getChildren().add(buttonsBox);
 
-        //Hiding the temporary label after loading an user
-        tempLabel.setText("Select the task you want to perform");
-
-        //Displaying current user's name
-        userLabel.setText("Hello, "+tempNewUser.getUsername());
-
         //Filtering list of tasks to show only the ones from current day of the week
-        wantDailyTasks = new Predicate<Task>() {
-            @Override
-            public boolean test(Task task) {
-                return (task.getDayOfWeek() == Calendar.getInstance().get(Calendar.DAY_OF_WEEK));
-            }
-        };
-        filteredList = new FilteredList<>(tempNewUser.getTasks(),wantDailyTasks);
+        //wantDailyTasks = new Predicate<Task>() {
+        //    @Override
+        //    public boolean test(Task task) {
+        //        return (task.getDayOfWeek() == Calendar.getInstance().get(Calendar.DAY_OF_WEEK));
+        //    }
+        //};
+        //filteredList = new FilteredList<>(user.getTasks(),wantDailyTasks);
 
-        //Populating ListView with user's tasks
-        tasksList.setItems(filteredList);
-        tasksList.setDisable(false);
-        tasksList.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-        //tasksList.getSelectionModel().selectFirst();
-
-        //Modifying displayed text in a cell
+        //Modifying look of displayed text in a cell
+        //Adding ContextMenu to ListView
         tasksList.setCellFactory(new Callback<ListView<Task>, ListCell<Task>>() {
             @Override
             public ListCell<Task> call(ListView<Task> param) {
-                ListCell<Task> listCell = new ListCell<>() {
+                ListCell<Task> listCell = new ListCell<Task>() {
                     @Override
                     protected void updateItem(Task item, boolean empty) {
                         super.updateItem(item, empty);
@@ -108,6 +92,14 @@ public class Controller {
                         }
                     }
                 };
+                listCell.emptyProperty().addListener(
+                        (obs, wasEmpty, isNowEmpty) -> {
+                            if(isNowEmpty) {
+                                listCell.setContextMenu(null);
+                            } else {
+                                listCell.setContextMenu(cellContextMenu);
+                            }
+                        });
                 return listCell;
             }
         });
@@ -115,9 +107,10 @@ public class Controller {
         //Creating a Timeline for changing tasks durations every second
         Timeline durationTimeline = new Timeline(new KeyFrame(Duration.millis(1000), event -> {
             Task task = tasksList.getSelectionModel().getSelectedItem();
-            task.setDuration(task.getDuration().plusSeconds(1));
-            refreshDurationLabel(task);
-            //TODO -> Stop at 24 hours
+            if(task.getDuration().toSeconds() < 86400) {
+                task.setDuration(task.getDuration().plusSeconds(1));
+                refreshDurationLabel(task);
+            }
         }));
         durationTimeline.setCycleCount(Animation.INDEFINITE);
 
@@ -139,13 +132,35 @@ public class Controller {
             }
         });
 
+        //Creating ContextMenu for adding/deleting tasks
+        MenuItem deleteMenuItem = new MenuItem("Delete task");
+        deleteMenuItem.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                durationTimeline.pause();
+                deleteTask(tasksList.getSelectionModel().getSelectedItem());
+            }
+        });
+        MenuItem editMenuItem = new MenuItem("Edit task");
+        editMenuItem.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                durationTimeline.pause();
+                editTask(tasksList.getSelectionModel().getSelectedItem());
+            }
+        });
+        cellContextMenu.getItems().addAll(deleteMenuItem,editMenuItem);
+
+
         //Refreshing the duration in Center property of BorderPane after clicking on another task on ListView
         tasksList.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Task>() {
             @Override
             public void changed(ObservableValue<? extends Task> observable, Task oldValue, Task newValue) {
-                refreshDurationLabel(newValue);
-                if(oldValue == null) {
+                if(!tasksList.getSelectionModel().isEmpty()) {
                     mainPane.setCenter(containerBox);
+                    refreshDurationLabel(newValue);
+                } else {
+                    mainPane.setCenter(tempLabel);
                 }
                 durationTimeline.pause();
             }
@@ -160,7 +175,115 @@ public class Controller {
         clockTimeline.play();
     }
 
-    private void refreshDurationLabel(Task selectedTask) {
+    private void editTask(Task selectedTask) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.initOwner(mainPane.getScene().getWindow());
+        dialog.setTitle("Edit task");
+        dialog.setHeaderText("Change task's name and task's time");
+        PassTask.getInstance().setTaskName(selectedTask.getName());
+        PassTask.getInstance().setTaskTime(selectedTask.getDuration());
+
+        FXMLLoader fxmlLoader = new FXMLLoader();
+        fxmlLoader.setLocation(getClass().getResource("editTask.fxml"));
+        try {
+            dialog.getDialogPane().setContent(fxmlLoader.load());
+        } catch(IOException e) {
+            System.out.println("Couldn't load the dialog!");
+            e.printStackTrace();
+            return;
+        }
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.OK);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
+
+        Optional<ButtonType> clickResult = dialog.showAndWait();
+        if(clickResult.isPresent() && clickResult.get() == ButtonType.OK) {
+            EditTask editTask = fxmlLoader.getController();
+            Task editedTask = editTask.loadResult();
+            user.editTaskOnList(selectedTask,editedTask);
+            tasksList.getSelectionModel().select(editedTask);
+        }
+    }
+
+    private void deleteTask(Task selectedTask) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Delete task?");
+        alert.setHeaderText("Delete item: "+selectedTask.getName());
+        alert.setContentText("Press OK to confirm, or Cancel to return.");
+        Optional<ButtonType> result = alert.showAndWait();
+        if(result.isPresent() && (result.get() == ButtonType.OK)) {
+            user.removeTaskFromList(selectedTask);
+            tasksList.getSelectionModel().clearSelection();
+        }
+    }
+
+    @FXML
+    private void addTask() {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.initOwner(mainPane.getScene().getWindow());
+        dialog.setTitle("Add new task");
+
+        FXMLLoader fxmlLoader = new FXMLLoader();
+        fxmlLoader.setLocation(getClass().getResource("createTask.fxml"));
+        try {
+            dialog.getDialogPane().setContent(fxmlLoader.load());
+        } catch(IOException e) {
+            System.out.println("Couldn't load the dialog!");
+            e.printStackTrace();
+            return;
+        }
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.OK);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
+
+        Optional<ButtonType> clickResult = dialog.showAndWait();
+        if(clickResult.isPresent() && clickResult.get() == ButtonType.OK) {
+            CreateTask createTask = fxmlLoader.getController();
+            Task newTask = createTask.loadResult();
+            user.addTaskToList(newTask);
+            tasksList.getSelectionModel().select(newTask);
+        }
+    }
+
+    @FXML
+    public void createUserDialog() {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.initOwner(mainPane.getScene().getWindow());
+        dialog.setTitle("Create new user");
+        dialog.setHeaderText("Please input your username");
+
+        FXMLLoader fxmlLoader = new FXMLLoader();
+        fxmlLoader.setLocation(getClass().getResource("createUser.fxml"));
+        try {
+            dialog.getDialogPane().setContent(fxmlLoader.load());
+        } catch(IOException e) {
+            System.out.println("Couldn't load the dialog!");
+            e.printStackTrace();
+            return;
+        }
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.OK);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
+
+        Optional<ButtonType> clickResult = dialog.showAndWait();
+        if(clickResult.isPresent() && clickResult.get() == ButtonType.OK) {
+            CreateUser createUser = fxmlLoader.getController();
+
+            user = createUser.loadResult();
+            user.clearTasks();
+
+            //Displaying current user's name
+            userLabel.setText("Hello, "+user.getUsername());
+            //Changing the temporary label after loading an user
+            tempLabel.setText("Select the task you want to perform");
+            addTaskButton.setDisable(false);
+
+            //Binding data from ListView with user's tasks
+            tasksList.getSelectionModel().clearSelection();
+            tasksList.setItems(user.getTasks());
+            tasksList.setDisable(false);
+            tasksList.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+        }
+    }
+
+    public void refreshDurationLabel(Task selectedTask) {
         long sec = selectedTask.getDuration().getSeconds();
         durationLabel.setText(String.format("%02d:%02d",sec/60,sec%60));
     }

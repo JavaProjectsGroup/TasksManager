@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<DialogPane fx:controller="com.projects.tasksmanager.EditTask"
+            xmlns:fx="http://javafx.com/fxml">
+    <content>
+        <GridPane vgap="10" hgap="10">
+            <Label text="Task's name: " GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+            <TextField fx:id="editTaskText" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+            <Label text="Task's time: " GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+            <HBox GridPane.columnIndex="1" GridPane.rowIndex="1">
+                <Spinner fx:id="editTaskTimeMinutes" min="0" max="1439" editable="true"/>
+                <Label text=" : "/>
+                <Spinner fx:id="editTaskTimeSeconds" min="0" max="59" editable="true"/>
+            </HBox>
+        </GridPane>
+    </content>
+</DialogPane>
