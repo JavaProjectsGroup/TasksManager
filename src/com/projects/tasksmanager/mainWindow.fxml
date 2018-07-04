@@ -21,11 +21,13 @@
     <top>
         <VBox>
             <MenuBar>
-                <Menu text="Manage">
+                <Menu text="User">
                     <items>
                         <MenuItem onAction="#createUserDialog" text="Create new user"/>
+                        <MenuItem onAction="#loadUserDialog" text="Load user"/>
+                        <MenuItem fx:id="saveMenuItem" onAction="#saveUserDialog" text="Save user" disable="true"/>
                         <SeparatorMenuItem/>
-                        <MenuItem text="Load user"/>
+                        <MenuItem text="Exit"/>
                     </items>
                 </Menu>
                 <Menu text="Statistics">
@@ -38,10 +40,30 @@
             <ToolBar style="-fx-border-color: #A8A8A8;
                    -fx-border-width: 0 1 1 0;
                    -fx-border-style: solid">
-                <Button fx:id="addTaskButton" onAction="#addTask" disable="true">
+                <Button fx:id="addTaskButton" disable="true">
                     <graphic>
                         <ImageView>
                             <Image url="@/toolbarButtonGraphics/general/Add24.gif" />
+                        </ImageView>
+                    </graphic>
+                    <tooltip>
+                        <Tooltip text="Click to add new task"/>
+                    </tooltip>
+                </Button>
+                <Button fx:id="moveUpTaskButton" onAction="#moveTask" disable="true">
+                    <graphic>
+                        <ImageView>
+                            <Image url="@/toolbarButtonGraphics/navigation/Up24.gif" />
+                        </ImageView>
+                    </graphic>
+                    <tooltip>
+                        <Tooltip text="Click to add new task"/>
+                    </tooltip>
+                </Button>
+                <Button fx:id="moveDownTaskButton" onAction="#moveTask" disable="true">
+                    <graphic>
+                        <ImageView>
+                            <Image url="@/toolbarButtonGraphics/navigation/Down24.gif" />
                         </ImageView>
                     </graphic>
                     <tooltip>

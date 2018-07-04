@@ -1,8 +1,9 @@
 package com.projects.tasksmanager.usermodel;
 
+import java.io.Serializable;
 import java.time.Duration;
 
-public class Task {
+public class Task implements Serializable {
     private String name;
     private Duration duration;
     private int dayOfWeek;
