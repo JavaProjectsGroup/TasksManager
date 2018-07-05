@@ -65,4 +65,26 @@ public class UserData {
             this.tasks = FXCollections.observableArrayList((ArrayList<Task>) inputStream.readObject());
         }
     }
+
+    public void copyUser(UserData userData) throws CloneNotSupportedException {
+        this.username = new String(userData.username);
+        this.tasks.clear();
+        for(Task task : userData.tasks) {
+            Task copiedTask = (Task) task.clone();
+            this.tasks.add(copiedTask);
+        }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj instanceof UserData) {
+            UserData userData = (UserData) obj;
+            return username.equals(userData.username) &&
+                    tasks.equals(userData.tasks);
+        }
+        return false;
+    }
 }

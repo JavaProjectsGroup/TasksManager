@@ -11,9 +11,9 @@
             <TextField fx:id="editTaskText" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
             <Label text="Task's time: " GridPane.columnIndex="0" GridPane.rowIndex="1"/>
             <HBox GridPane.columnIndex="1" GridPane.rowIndex="1">
-                <Spinner fx:id="editTaskTimeMinutes" min="0" max="1439" editable="true"/>
+                <Spinner fx:id="editTaskTimeMinutes" min="0" editable="true" />
                 <Label text=" : "/>
-                <Spinner fx:id="editTaskTimeSeconds" min="0" max="59" editable="true"/>
+                <Spinner fx:id="editTaskTimeSeconds" min="0" editable="true"/>
             </HBox>
         </GridPane>
     </content>
