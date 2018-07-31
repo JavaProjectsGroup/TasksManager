@@ -20,10 +20,11 @@ public class LoadUser {
 
         File folder = new File(pathName);
         File[] listOfFiles = folder.listFiles();
-
-        for (int i=0; i<listOfFiles.length; i++) {
-            if (listOfFiles[i].isFile() && listOfFiles[i].getName().endsWith(".bin")) {
-                usersList.add(listOfFiles[i].getName().replace(".bin",""));
+        if(listOfFiles != null) {
+            for (File file : listOfFiles) {
+                if (file.isFile() && file.getName().endsWith(".bin")) {
+                    usersList.add(file.getName().replace(".bin", ""));
+                }
             }
         }
         usersListView.setItems(usersList);

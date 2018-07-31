@@ -59,6 +59,7 @@ public class UserData {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public void loadUser(String filePath) throws IOException, ClassNotFoundException {
         try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(filePath))) {
             this.username = (String)inputStream.readObject();
