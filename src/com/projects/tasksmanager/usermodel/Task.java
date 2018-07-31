@@ -8,11 +8,19 @@ public class Task implements Serializable, Cloneable {
     private Duration duration;
     private int dayOfWeek;
     private String comment = "";
+    private String finishedOn = "";
+    boolean finished = false;
 
     public Task(String name, Duration duration, int dayOfWeek) {
         this.name = name;
         this.duration = duration;
         this.dayOfWeek = dayOfWeek;
+    }
+
+    public Task(Task task) {
+        this.name = task.name;
+        this.duration = task.duration;
+        this.dayOfWeek = task.dayOfWeek;
     }
 
     public String getName() {
@@ -47,6 +55,22 @@ public class Task implements Serializable, Cloneable {
         this.comment = comment;
     }
 
+    public String getFinishedOn() {
+        return finishedOn;
+    }
+
+    public void setFinishedOn(String finishedOn) {
+        this.finishedOn = finishedOn;
+    }
+
+    public boolean isFinished() {
+        return finished;
+    }
+
+    public void setFinished(boolean finished) {
+        this.finished = finished;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj == null) {
@@ -57,7 +81,9 @@ public class Task implements Serializable, Cloneable {
             return name.equals(task.name) &&
                     duration.equals(task.duration) &&
                     (dayOfWeek == task.dayOfWeek) &&
-                    comment.equals(task.comment);
+                    comment.equals(task.comment) &&
+                    finishedOn.equals(task.finishedOn) &&
+                    (finished == task.finished);
         }
         return false;
     }

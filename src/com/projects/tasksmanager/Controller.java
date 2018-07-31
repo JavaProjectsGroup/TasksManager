@@ -20,6 +20,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
@@ -30,6 +31,8 @@ import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -62,6 +65,8 @@ public class Controller {
     private VBox containerBox = new VBox();
     private HBox buttonsBox = new HBox();
     private Label durationLabel = new Label("mm:ss");
+    private Label commentLabel = new Label("");
+    private Label finishedOnLabel = new Label("");
     private Button contButton = new Button();
     private Button stopButton = new Button();
     private ContextMenu cellContextMenu = new ContextMenu();
@@ -75,8 +80,10 @@ public class Controller {
         contButton.setFont(new Font("Arial bold",20));
         stopButton.setGraphic(new ImageView(new Image("/toolbarButtonGraphics/media/Stop24.gif")));
         contButton.setGraphic(new ImageView(new Image("/toolbarButtonGraphics/media/Play24.gif")));
-
+        containerBox.setSpacing(10);
         durationLabel.setFont(new Font("Arial bold",60));
+        finishedOnLabel.setFont(new Font("Arial bold",15));
+        commentLabel.setFont(new Font("Arial",20));
         buttonsBox.setAlignment(Pos.CENTER);
         buttonsBox.setSpacing(30);
         containerBox.setAlignment(Pos.CENTER);
@@ -85,6 +92,8 @@ public class Controller {
         containerBox.getChildren().add(durationLabel);
         buttonsBox.getChildren().addAll(contButton,stopButton);
         containerBox.getChildren().add(buttonsBox);
+        containerBox.getChildren().add(finishedOnLabel);
+        containerBox.getChildren().add(commentLabel);
 
         //Filtering list of tasks to show only the ones from current day of the week
         //wantDailyTasks = new Predicate<Task>() {
@@ -107,6 +116,11 @@ public class Controller {
                         if(empty) {
                             setText(null);
                         } else {
+                            if(item.isFinished()) {
+                                setTextFill(Color.RED);
+                            } else {
+                                setTextFill(Color.BLACK);
+                            }
                             setText(item.getName());//Display task's name
                         }
                     }
@@ -161,25 +175,13 @@ public class Controller {
         stopButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                //TODO: Adding comment when stopped, disabling buttons (play/pause and stop)
-                durationTimeline.stop();
+                finishTaskDialog(tasksList.getSelectionModel().getSelectedItem());
             }
         });
         addTaskButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                durationTimeline.pause();
-
-                //Creating DialogPair to return default Dialog and FXMLLoader
-                DialogPair dialogPair = dialogCreation("Add new task", "Please input task's name", "createTask.fxml");
-
-                Optional<ButtonType> clickResult = dialogPair.getDialog().showAndWait();
-                if(clickResult.isPresent() && clickResult.get() == ButtonType.OK) {
-                    CreateTask createTask = dialogPair.getFxmlLoader().getController();
-                    Task newTask = createTask.loadResult();
-                    user.addTaskToList(newTask);
-                    tasksList.getSelectionModel().select(newTask);
-                }
+                createTaskDialog();
             }
         });
 
@@ -206,6 +208,17 @@ public class Controller {
             public void changed(ObservableValue<? extends Task> observable, Task oldValue, Task newValue) {
                 if(!tasksList.getSelectionModel().isEmpty()) {
                     mainPane.setCenter(containerBox);
+                    if(newValue.isFinished()) {
+                        durationLabel.setTextFill(Color.RED);
+                        stopButton.setDisable(true);
+                        contButton.setDisable(true);
+                    } else {
+                        durationLabel.setTextFill(Color.BLACK);
+                        stopButton.setDisable(false);
+                        contButton.setDisable(false);
+                    }
+                    finishedOnLabel.setText(newValue.getFinishedOn());
+                    commentLabel.setText(newValue.getComment());
                     refreshDurationLabel(newValue);
                     moveUpTaskButton.setDisable(false);
                     moveDownTaskButton.setDisable(false);
@@ -323,7 +336,7 @@ public class Controller {
             if (userFile == null) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Error");
-                alert.setContentText("Please select user!");
+                alert.setContentText("Please select an user!");
                 alert.show();
             } else {
                 try {
@@ -371,6 +384,12 @@ public class Controller {
         }
     }
 
+    @FXML
+    public void handleExit() {
+        changesNotSavedAlert();
+        Platform.exit();
+    }
+
     private void changesNotSavedAlert() {
         if(!user.equals(savedUser)) {
             Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -395,10 +414,9 @@ public class Controller {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.initOwner(mainPane.getScene().getWindow());
         dialog.setTitle("Edit task");
-        dialog.setHeaderText("Change task's name and task's time");
+        dialog.setHeaderText("Change task's parameters");
 
-        PassTask.getInstance().setTaskName(selectedTask.getName());
-        PassTask.getInstance().setTaskTime(selectedTask.getDuration());
+        PassTask.getInstance().setTask(selectedTask);
 
         FXMLLoader fxmlLoader = new FXMLLoader();
         fxmlLoader.setLocation(getClass().getResource("editTask.fxml"));
@@ -418,6 +436,44 @@ public class Controller {
             Task editedTask = editTask.loadResult();
             user.editTaskOnList(selectedTask, editedTask);
             tasksList.getSelectionModel().select(editedTask);
+        }
+    }
+
+    private void createTaskDialog() {
+        durationTimeline.pause();
+
+        //Creating DialogPair to return default Dialog and FXMLLoader
+        DialogPair dialogPair = dialogCreation("Add new task", "Please input task's name", "createTask.fxml");
+
+        Optional<ButtonType> clickResult = dialogPair.getDialog().showAndWait();
+        if(clickResult.isPresent() && clickResult.get() == ButtonType.OK) {
+            CreateTask createTask = dialogPair.getFxmlLoader().getController();
+            Task newTask = createTask.loadResult();
+            user.addTaskToList(newTask);
+            tasksList.getSelectionModel().select(newTask);
+        }
+    }
+
+    private void finishTaskDialog(Task selectedTask) {
+        durationTimeline.stop();
+
+        DialogPair dialogPair = dialogCreation("Finish task: "+selectedTask.getName(), "Please input comment for your finished task", "finishTask.fxml");
+
+        Optional<ButtonType> clickResult = dialogPair.getDialog().showAndWait();
+        if(clickResult.isPresent() && clickResult.get() == ButtonType.OK) {
+            FinishTask finishTask = dialogPair.getFxmlLoader().getController();
+
+            Task finishedTask = new Task(selectedTask);
+            finishedTask.setComment(finishTask.loadResult());
+
+            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+            LocalDateTime now = LocalDateTime.now();
+            finishedTask.setFinishedOn("Task finished on "+dtf.format(now));
+            finishedTask.setFinished(true);
+
+
+            user.editTaskOnList(selectedTask, finishedTask);
+            tasksList.getSelectionModel().select(finishedTask);
         }
     }
 

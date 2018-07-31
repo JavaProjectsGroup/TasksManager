@@ -27,10 +27,8 @@
                         <MenuItem onAction="#loadUserDialog" text="Load user"/>
                         <MenuItem fx:id="saveMenuItem" onAction="#saveUserDialog" text="Save user" disable="true"/>
                         <SeparatorMenuItem/>
-                        <MenuItem text="Exit"/>
+                        <MenuItem onAction="#handleExit" text="Exit"/>
                     </items>
-                </Menu>
-                <Menu text="Statistics">
                 </Menu>
             </MenuBar>
         </VBox>

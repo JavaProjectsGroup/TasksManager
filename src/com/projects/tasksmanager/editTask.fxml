@@ -6,7 +6,7 @@
 <DialogPane fx:controller="com.projects.tasksmanager.EditTask"
             xmlns:fx="http://javafx.com/fxml">
     <content>
-        <GridPane vgap="10" hgap="10">
+        <GridPane fx:id="gridPaneEditTask" vgap="10" hgap="10">
             <Label text="Task's name: " GridPane.columnIndex="0" GridPane.rowIndex="0"/>
             <TextField fx:id="editTaskText" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
             <Label text="Task's time: " GridPane.columnIndex="0" GridPane.rowIndex="1"/>
