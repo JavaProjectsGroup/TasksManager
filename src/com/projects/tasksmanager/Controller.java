@@ -71,9 +71,6 @@ public class Controller {
     private Button stopButton = new Button();
     private ContextMenu cellContextMenu = new ContextMenu();
 
-    //private FilteredList<Task> filteredList;
-    //private Predicate<Task> wantDailyTasks;
-
     public void initialize() {
         //Modifying look of Labels and Buttons
         stopButton.setFont(new Font("Arial bold",20));
@@ -94,15 +91,6 @@ public class Controller {
         containerBox.getChildren().add(buttonsBox);
         containerBox.getChildren().add(finishedOnLabel);
         containerBox.getChildren().add(commentLabel);
-
-        //Filtering list of tasks to show only the ones from current day of the week
-        //wantDailyTasks = new Predicate<Task>() {
-        //  @Override
-        //  public boolean test(Task task) {
-        //      return (task.getDayOfWeek() == Calendar.getInstance().get(Calendar.DAY_OF_WEEK));
-        //  }
-        //};
-        //filteredList = new FilteredList<>(user.getTasks(),wantDailyTasks);
 
         //Modifying look of displayed text in a cell
         //Adding ContextMenu to ListView
